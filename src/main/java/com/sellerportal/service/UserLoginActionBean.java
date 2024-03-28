@@ -143,7 +143,7 @@ public class UserLoginActionBean {
 	IsmubiRepo ismubiDao;
 	
 	@Autowired
-	IsmacrCustomRepo iamacrCustomDao;
+	IsmacrRepo ismacrDao;
 
 	private Timestamp timestamp;
 
@@ -1236,7 +1236,7 @@ public class UserLoginActionBean {
 
 	public void setPageAuthDetails(Long userId) {
 		try {
-			List pageList = iamacrCustomDao.findByUserIdOrCommandOrPagename(userId,null,null);
+			List pageList = ismacrDao.findByUserIdOrCommandOrPagename(userId,null,null);
 			if (pageList != null && !pageList.isEmpty()) {
 				LinkedHashMap<String, String> pageMap = new LinkedHashMap<>();
 				for (int i = 0; i < pageList.size(); i++) {
