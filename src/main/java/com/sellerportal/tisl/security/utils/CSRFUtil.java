@@ -4,14 +4,19 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.sellerportal.integra.impl.octashop.utils.OctashopUtils;
 import com.sellerportal.ism.SessionVariablesBean;
 import com.anm.jsf.utils.FacesUtils;
 
+@Component
 public final class CSRFUtil {
 	private static final Log LOGGER = LogFactory.getLog(CSRFUtil.class);
 	
+	@Autowired
+	SessionVariablesBean sessionBean;
 	/**
 	 * Private constructor to restrict instantiation
 	 */
@@ -21,8 +26,7 @@ public final class CSRFUtil {
 	    return UUID.randomUUID().toString();
 	}
 	
-	public static void attachCSRFToken() {
-		SessionVariablesBean sessionBean = (SessionVariablesBean) FacesUtils.getManagedBean("SessionVariablesBean");
+	public void attachCSRFToken() {
 		sessionBean.setCsrfToken(CSRFUtil.generateCSRFToken());
 	}
 	

@@ -16,5 +16,9 @@ public interface LoginRepository extends JpaRepository<Ismubi,Long> {
 	String findByUbiloginAndUbipass(String ubilogin,String ubipass);
 
 	Ismubi findByUbilogin(String loginId);
+	
+	@Query("SELECT ubi.ubilogin FROM Ismubi ubi WHERE ubi.ubilogin =?1 " +
+	           "AND (ubi.ubilogin != 'superadmin@anmsoft.com' OR (ubi.ubiactive = 'Y' AND ubi.deleted = 'N'))")
+	String checkValidLoginUser(String ubilogin);
 
 }

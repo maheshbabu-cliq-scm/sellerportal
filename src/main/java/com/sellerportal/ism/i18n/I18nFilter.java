@@ -52,7 +52,6 @@ import com.sellerportal.integra.impl.octashop.utils.OctashopUtils;
 import com.sellerportal.ism.SessionVariablesBean;
 import com.sellerportal.dao.StatelessSessionDAO;
 import com.sellerportal.ism.i18n.core.sqlparser.MultilanguageHelper;
-import com.sellerportal.ism.search.lucene.indexing.JdbcConnection;
 import com.anm.security.DefaultAuthorizer;
 /**
  * Localaziation Filter : Handle the initialization of the organization and
@@ -268,7 +267,7 @@ public class I18nFilter implements Filter {
 		    
 		    HibernateConnection.getSession().clear();
 			HibernateConnection.closeSession();
-			JdbcConnection.closeConnection();
+//			JdbcConnection.closeConnection();
 			
 			try {
 				StatelessSessionDAO.closeStatelessSession();

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.sellerportal.model.Ismart;
 import com.sellerportal.dao.IsmartDAO;
@@ -29,6 +30,7 @@ import com.sellerportal.dao.IsmgatDAO;
 import com.anm.jsf.utils.MessageFactory;
 import com.anm.utils.CommonUtils;
 
+@Component
 public class I18nHelper {
 	private static final Log LOGGER = LogFactory.getLog("I18nHelper");
 
@@ -42,7 +44,6 @@ public class I18nHelper {
 	public static String SCOPE_PREFIX = "com.anm.octashop.";
 	
 	@Autowired
-	static
 	HttpServletRequest request;
 
 	/**
@@ -512,10 +513,8 @@ public class I18nHelper {
 	 * property file
 	 * 
 	 */
-	public static FacesMessage getMessage(String key,Object params[]){
+	public FacesMessage getMessage(String key,Object params[]){
 		
-		FacesContext ctx = FacesContext.getCurrentInstance();
-		HttpServletRequest request = (HttpServletRequest)ctx.getExternalContext().getRequest();
 		FacesMessage msg = null;
 		
 			Locale locale = (Locale)request.getAttribute("locale");

@@ -37,6 +37,10 @@ public class StagingLoginActionBean {
     
     @Autowired
 	private UserValidationActionBean uvab;
+    
+    
+    @Autowired
+	I18nHelper i18nHelper;
 
    
 
@@ -65,7 +69,7 @@ public class StagingLoginActionBean {
             result = uvab.loginAction(loginId, password);
         } catch (Exception e1) {
         	LOGGER.error(e1.getStackTrace());
-            FacesMessage msg =I18nHelper.getMessage("Authentication_failure",null);
+            FacesMessage msg =i18nHelper.getMessage("Authentication_failure",null);
             String errorMsg="Authentication failure:[" + e1.getMessage() + "]";            
             ctx.addMessage(
                     null, msg);
@@ -113,16 +117,16 @@ public class StagingLoginActionBean {
                 		}
                 	}
                 	else {
-                   	 	FacesMessage msg =I18nHelper.getMessage("invalid",null);                
+                   	 	FacesMessage msg =i18nHelper.getMessage("invalid",null);                
                         ctx.addMessage(null, msg);
                 	}
                 } else {
-                	 FacesMessage msg =I18nHelper.getMessage("invalidforism",null);                    
+                	 FacesMessage msg =i18nHelper.getMessage("invalidforism",null);                    
                      ctx.addMessage(
                             null, msg);
                 }
             } else {
-            	 FacesMessage msg =I18nHelper.getMessage("invalid",null);                
+            	 FacesMessage msg =i18nHelper.getMessage("invalid",null);                
                  ctx.addMessage(
                         null, msg);
             }

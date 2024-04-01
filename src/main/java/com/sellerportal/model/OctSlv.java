@@ -169,7 +169,7 @@ public class OctSlv implements Serializable {
     @Column(name = "OCTSLVLPHANDOVERTIME", length = 20)
     private String octslvlphandovertime;
 
-    @Column(name = "OCTSLVPHANDOVERTIMEEDAIR", length = 20)
+    @Column(name = "OCTSLVLPHANDOVERTIMEEDAIR", length = 20)
     private String octslvlphandovertimeedair;
 
     @Column(name = "OCTSLVLPHANDOVERTIMEHDSURF", length = 20)

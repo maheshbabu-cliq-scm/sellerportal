@@ -48,7 +48,7 @@ public class IsmacrRepoImpl implements IsmacrCustomRepo{
 			}
 
 			queryString = sb.toString();
-			javax.persistence.Query query=entityManager.createNativeQuery(queryString);
+			javax.persistence.Query query=entityManager.createQuery(queryString);
 			query.setParameter("userId", userId);
 			if(command!=null && !command.equals("")){
 				query.setParameter("command", command);

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -66,6 +67,7 @@ import com.sellerportal.repository.IsmacrRepo;
 import com.sellerportal.repository.IsmubiRepo;
 import com.sellerportal.repository.LoginRepository;
 import com.sellerportal.repository.ParamRepo;
+import com.sellerportal.repository.SlrCategoryAssociationRepo;
 import com.sellerportal.repository.SlrRepo;
 import com.sellerportal.repository.SlrScoreRepo;
 import com.sellerportal.repository.SlrUsrRepo;
@@ -88,7 +90,7 @@ import com.sellerportal.tisl.servlet.ResetPasswordConstants;
 public class UserLoginActionBean {
 
 	private static final Log LOGGER = LogFactory.getLog(UserLoginActionBean.class);
-	private Properties applicationConfiguration = I18nHelper.loadResource("appConfig.properties");
+
 	private Long loginAttempts;
 
 	@Autowired
@@ -144,6 +146,19 @@ public class UserLoginActionBean {
 	
 	@Autowired
 	IsmacrRepo ismacrDao;
+	
+	@Autowired
+	SlrCategoryAssociationRepo slrCategoryAssociationDao;
+	
+	@Autowired
+	I18nHelper i18nHelper;
+	
+	@Autowired
+	CSRFUtil csrfutil;
+	
+	
+	
+	private Properties applicationConfiguration = i18nHelper.loadResource("appConfig.properties");
 
 	private Timestamp timestamp;
 
@@ -164,17 +179,13 @@ public class UserLoginActionBean {
 		boolean result = false;
 
 		HttpSession session = request.getSession(false);
-//		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//		Timestamp timestamp = timestamp.valueOf(System.currentTimeMillis()+"");
 
-//		SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 
 		if (session != null) {
 			session.invalidate();
 		}
 		String contextPath = request.getContextPath();
 
-//		SessionVariablesBean svb=svb;
 		UserLoginBean userLoginBean = (UserLoginBean) AutoPopulateBeanHelper.populate(request, ulb);
 		String sellerRfnum = null;
 		String imgPath = "";
@@ -201,12 +212,11 @@ public class UserLoginActionBean {
 							userLoginBean.setAttemptCount(loginAttempts + 1);
 							loginDao.save(ismubi);
 							FacesMessage msg = null;
-							msg = I18nHelper.getMessage(
+							msg = i18nHelper.getMessage(
 									"You have been blocked because of too many attempts. Please contact system administrator.",
 									null);
 							String message = msg.getSummary();
 							userLoginBean.setMessage(message);
-//							errorBean.setErrorMessage(message);
 
 						} else {
 							userLoginBean.setAttemptCount(0l);
@@ -262,15 +272,7 @@ public class UserLoginActionBean {
 															svb.setSlvType(slvType);
 															svb.setIsCNC(
 																	octslvusr.getOctSlv().getOctslvCollectEnable());
-															if (octslvusr.getOctSlv().getOctslvisactive() != null) { // Active
-																														// Check
-																														// commented
-																														// Slave
-																														// user
-																														// login
-																														// without
-																														// Tax
-																														// Setup
+															if (octslvusr.getOctSlv().getOctslvisactive() != null) { 
 																OctSlr octslr = octslrDao.getById(octslvusr.getOctSlv()
 																		.getOctSlr().getOctslrrfnum());
 																svb.setIsEnablement(octslr.getOctslrCollectEnable());
@@ -358,7 +360,7 @@ public class UserLoginActionBean {
 															svb.setIsEnablement(octslr.getOctslrCollectEnable());
 
 															// @gulab For Fine Jewellery R3.1 Start
-															SlrCategoryAssociation slrcatass = new SlrCategoryAssociationDAO()
+															SlrCategoryAssociation slrcatass = slrCategoryAssociationDao
 																	.findBySellercodeCatgoryCode(svb.getUserCode(),
 																			ProductConst.L1_FINE_CAT);
 															if (!OctashopUtils.isObjectEmpty(slrcatass)) {
@@ -379,14 +381,6 @@ public class UserLoginActionBean {
 																svb.setIsReturnToStore("N");
 															}
 
-															// R2.3 Return To Store end
-//															if(ismubi != null){
-//																String prfCmpltVal =new CreateSellerActionBean().
-//																		getProfileComptionPercentage(octslrusr.getIsmubi().getUbirfnum()+"");  
-//																if(prfCmpltVal != null && !prfCmpltVal.equals("")){
-//																	svb.setProfilePercentage(prfCmpltVal);
-//																}										
-//															}
 															if (!OctashopUtils.isObjectEmpty(octslrusr.getOctSlr())
 																	&& !OctashopUtils.isEmpty(
 																			octslrusr.getOctSlr().getOctslrlname())) {
@@ -491,7 +485,7 @@ public class UserLoginActionBean {
 													}
 												} else {
 													FacesMessage msg = null;
-													msg = I18nHelper.getMessage("Your password is expired please reset",
+													msg = i18nHelper.getMessage("Your password is expired please reset",
 															new String[] { loginId });
 													String message = msg.getSummary();
 													userLoginBean.setMessage(message);
@@ -500,9 +494,9 @@ public class UserLoginActionBean {
 												}
 											} else {
 												ismubi.setIsAccountexpired("Y");
-												new IsmubiDAO().update(ismubi);
+												ismubiDao.save(ismubi);
 												FacesMessage msg = null;
-												msg = I18nHelper.getMessage(
+												msg = i18nHelper.getMessage(
 														"Your account is expired please contact Tata Cliq",
 														new String[] { loginId });
 												String message = msg.getSummary();
@@ -512,7 +506,7 @@ public class UserLoginActionBean {
 											}
 										} else {
 											FacesMessage msg = null;
-											msg = I18nHelper.getMessage(
+											msg = i18nHelper.getMessage(
 													"Your account is expired please contact Tata Cliq",
 													new String[] { loginId });
 											String message = msg.getSummary();
@@ -525,7 +519,7 @@ public class UserLoginActionBean {
 								} else {
 
 									FacesMessage msg = null;
-									msg = I18nHelper.getMessage("invalid", new String[] { loginId });
+									msg = i18nHelper.getMessage("invalid", new String[] { loginId });
 									String message = msg.getSummary();
 									userLoginBean.setMessage(message);
 //									errorBean.setErrorMessage(message);
@@ -535,7 +529,7 @@ public class UserLoginActionBean {
 
 							} else {
 								FacesMessage msg = null;
-								msg = I18nHelper.getMessage("invalid", null);
+								msg = i18nHelper.getMessage("invalid", null);
 								String message = msg.getSummary();
 								userLoginBean
 										.setMessage(
@@ -550,16 +544,16 @@ public class UserLoginActionBean {
 
 						result = uvab.loginUserAction(loginId);
 						if (result) {
-							ismubi = new IsmubiDAO().findByUserId(loginId);
+							ismubi = ismubiDao.findByUbilogin(loginId);
 							loginAttempts = ismubi.getLoginAttempts();
 
 							if (loginAttempts != null && loginAttempts >= Long
-									.valueOf(applicationConfiguration.getProperty("maximumLoginAttempts"))) {
+									.valueOf(env.getProperty("maximumLoginAttempts"))) {
 								ismubi.setLoginAttempts(loginAttempts + 1);
 								userLoginBean.setAttemptCount(loginAttempts + 1);
-								new IsmubiDAO().update(ismubi);
+								ismubiDao.save(ismubi);
 								FacesMessage msg = null;
-								msg = I18nHelper.getMessage(
+								msg = i18nHelper.getMessage(
 										"You have been blocked because of too many attempts. Please contact system administrator.",
 										null);
 								String message = msg.getSummary();
@@ -576,9 +570,9 @@ public class UserLoginActionBean {
 
 								ismubi.setLoginAttempts(loginAttempts + 1);
 								userLoginBean.setAttemptCount(loginAttempts + 1);
-								new IsmubiDAO().update(ismubi);
+								ismubiDao.save(ismubi);
 								FacesMessage msg = null;
-								msg = I18nHelper.getMessage(
+								msg = i18nHelper.getMessage(
 										"Password Incorrect.You have " + (4 - loginAttempts) + " attempts left", null);
 								String message = msg.getSummary();
 								userLoginBean.setMessage(message);
@@ -593,7 +587,7 @@ public class UserLoginActionBean {
 								new IsmubiDAO().update(ismubi);
 
 								FacesMessage msg = null;
-								msg = I18nHelper.getMessage("You have been blocked. Please try after 10 minutes.",
+								msg = i18nHelper.getMessage("You have been blocked. Please try after 10 minutes.",
 										null);
 								String message = msg.getSummary();
 								userLoginBean.setMessage(message);
@@ -601,7 +595,7 @@ public class UserLoginActionBean {
 							}
 						} else {
 							FacesMessage msg = null;
-							msg = I18nHelper.getMessage("invalid", new String[] { loginId });
+							msg = i18nHelper.getMessage("invalid", new String[] { loginId });
 							String message = msg.getSummary();
 							userLoginBean.setMessage(message);
 //							errorBean.setErrorMessage(message);
@@ -611,7 +605,7 @@ public class UserLoginActionBean {
 					}
 					// @Nishant added TPR-6575
 					if (userType.getParamcode() != null && userType.getParamcode().equalsIgnoreCase("SLV")) {
-						OctSlvUsr octslvusr = new OctSlvUsrDAO().findByUbirfnum(ismubi.getUbirfnum());
+						OctSlvUsr octslvusr = octslvusrDao.findByIsmubi(ismubi.getUbirfnum());
 						if (!OctashopUtils.isObjectEmpty(octslvusr)
 								&& !OctashopUtils.isObjectEmpty(octslvusr.getOctSlv())) {
 							if ("Y".equals(octslvusr.getOctSlv().getIsAllowErPanel())) {
@@ -625,10 +619,12 @@ public class UserLoginActionBean {
 					}
 					// Shankar Start
 					if (userType.getParamcode() != null && userType.getParamcode().equalsIgnoreCase("SLR")) {
-						OctSlrUsr octslrusr = new OctSlrUsrDAO().findByUbirfnum(ismubi.getUbirfnum());
+						OctSlrUsr octslrusr = octslrusrDao.findByIsmubi(ismubi.getUbirfnum());
 						if (!OctashopUtils.isObjectEmpty(octslrusr)) {
-							OctSlr octslr = new OctSlrDAO().findByPK(octslrusr.getOctSlr().getOctslrrfnum());
-							if (OctashopUtils.isNotEmpty(octslr)) {
+							Optional<OctSlr> optionalOctSlr = octslrDao.findById(octslrusr.getOctSlr().getOctslrrfnum());
+							
+							if (optionalOctSlr.isPresent()) {
+								OctSlr octslr=optionalOctSlr.get();
 								if ("Y".equals(octslr.getIsERPanelEligible())) {
 									svb.setIsERPanelEligible("Y");
 								} else {
@@ -648,11 +644,11 @@ public class UserLoginActionBean {
 					}
 					// Nishant End maskcustdata TPR-10774
 
-					CSRFUtil.attachCSRFToken();
+					csrfutil.attachCSRFToken();
 
 				} catch (Exception e) {
 					String errMsg = "";
-					FacesMessage msg = I18nHelper.getMessage("Could_not_verify_logon_from_sso", null);
+					FacesMessage msg = i18nHelper.getMessage("Could_not_verify_logon_from_sso", null);
 //					ctx.addMessage(null, msg);
 					LOGGER.info(errMsg);
 					userLoginBean.setMessage(errMsg);
@@ -753,7 +749,7 @@ public class UserLoginActionBean {
 			LOGGER.error(e1.getStackTrace());
 			LOGGER.error("SSO Login Error: [" + e1.getMessage() + "]");
 			String errMsg = "Could not verify logon from sso [" + e1.getMessage() + "]";
-			facesmsg = I18nHelper.getMessage("Could_not_verify_logon_from_sso", null);
+			facesmsg = i18nHelper.getMessage("Could_not_verify_logon_from_sso", null);
 			msg = facesmsg.getSummary();
 			LOGGER.info(errMsg);
 
@@ -891,14 +887,14 @@ public class UserLoginActionBean {
 									} else {
 										FacesContext.getCurrentInstance().addMessage(null,
 												new FacesMessage("Your link is expired"));
-										msgResponse = I18nHelper.getMessage("Your link is expired", null);
+										msgResponse = i18nHelper.getMessage("Your link is expired", null);
 										request.setAttribute("msgResponse", msgResponse.getSummary());
 										return null;
 									}
 								} else {
 									FacesContext.getCurrentInstance().addMessage(null,
 											new FacesMessage("Password Doesn not match"));
-									msgResponse = I18nHelper.getMessage("Password Does not match", null);
+									msgResponse = i18nHelper.getMessage("Password Does not match", null);
 									request.setAttribute("msgResponse", msgResponse.getSummary());
 									return null;
 								}
@@ -906,20 +902,20 @@ public class UserLoginActionBean {
 							} else {
 								FacesContext.getCurrentInstance().addMessage(null,
 										new FacesMessage("Confirm Password Empty"));
-								msgResponse = I18nHelper.getMessage("Re enter Password Empty", null);
+								msgResponse = i18nHelper.getMessage("Re enter Password Empty", null);
 								request.setAttribute("msgResponse", msgResponse.getSummary());
 								return null;
 							}
 						} else {
 							FacesContext.getCurrentInstance().addMessage(null,
 									new FacesMessage("Reset Password is Empty"));
-							msgResponse = I18nHelper.getMessage("New Password is Empty", null);
+							msgResponse = i18nHelper.getMessage("New Password is Empty", null);
 							request.setAttribute("msgResponse", msgResponse.getSummary());
 							return null;
 						}
 					} else {
 						FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("User Does Not Exist"));
-						msgResponse = I18nHelper.getMessage("User Does Not Exist", null);
+						msgResponse = i18nHelper.getMessage("User Does Not Exist", null);
 						request.setAttribute("msgResponse", msgResponse.getSummary());
 						return null;
 					}
@@ -931,7 +927,7 @@ public class UserLoginActionBean {
 		}
 		FacesContext.getCurrentInstance().addMessage(null,
 				new FacesMessage("Password Reset Successfully please go to login page "));
-		msgResponse = I18nHelper.getMessage("Password Reset Successfully please go to login page", null);
+		msgResponse = i18nHelper.getMessage("Password Reset Successfully please go to login page", null);
 		request.setAttribute("msgResponse", msgResponse.getSummary());
 		return null;
 	}
@@ -977,13 +973,13 @@ public class UserLoginActionBean {
 							passwordBean.setUbiRfNum(ecUbiRfnum);
 						}
 					} else {
-						facesmsg = I18nHelper.getMessage("Invalid Link", null);
+						facesmsg = i18nHelper.getMessage("Invalid Link", null);
 						LOGGER.info("Invalid Link");
 						req.setAttribute("passwordmessage", facesmsg.getSummary());
 
 					}
 				} else {
-					facesmsg = I18nHelper.getMessage("Invalid User", null);
+					facesmsg = i18nHelper.getMessage("Invalid User", null);
 					LOGGER.info("Invalid user");
 					req.setAttribute("Invalid User", facesmsg.getSummary());
 				}
@@ -1004,7 +1000,7 @@ public class UserLoginActionBean {
 		if (captchaR != null) {
 
 			if (!captchaR.equals(captchaG)) {
-				FacesMessage msg = I18nHelper.getMessage("Invalid Captcha", null);
+				FacesMessage msg = i18nHelper.getMessage("Invalid Captcha", null);
 				String message = msg.getSummary();
 				userLoginBean.setMessage(message);
 				userLoginBean.setAttemptCount(3l);
@@ -1015,39 +1011,39 @@ public class UserLoginActionBean {
 
 		String id = userLoginBean.getLoginId();
 		if (id == null || id.equals("")) {
-			FacesMessage msg = I18nHelper.getMessage("Please_enter_loginid", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_enter_loginid", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
 		int Str1 = id.indexOf(' ');
 		if (Str1 == 0) {
-			FacesMessage msg = I18nHelper.getMessage("Please_do_not_leave_space_before_loginid", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_do_not_leave_space_before_loginid", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
 
 		if ((Str1 > 0) && (Str1 < (id.length()))) {
-			FacesMessage msg = I18nHelper.getMessage("Please_do_not_use_spaces_loginid", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_do_not_use_spaces_loginid", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
 
 		String password = userLoginBean.getPassword();
 		if (password == null || password.toString().equals("")) {
-			FacesMessage msg = I18nHelper.getMessage("Please_enter_password", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_enter_password", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
 
 		int str2 = password.indexOf(' ');
 		if (str2 == 0) {
-			FacesMessage msg = I18nHelper.getMessage("Please_do_not_leave_space_before_pasword", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_do_not_leave_space_before_pasword", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
 
 		if ((str2 > 0) && (str2 < (password.length()))) {
-			FacesMessage msg = I18nHelper.getMessage("Please_do_not_use_spaces_password", null);
+			FacesMessage msg = i18nHelper.getMessage("Please_do_not_use_spaces_password", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return null;
 		}
@@ -1072,7 +1068,7 @@ public class UserLoginActionBean {
 				response.sendRedirect(contextPath + "/faces/commons/userLogin.jsp");
 				ctx.responseComplete();
 				url = contextPath + "/faces/commons/userLogin.jsp";
-				FacesMessage msg = I18nHelper.getMessage("Please_Enter_Valid_User_Id_And_Password", null);
+				FacesMessage msg = i18nHelper.getMessage("Please_Enter_Valid_User_Id_And_Password", null);
 				ctx.addMessage(null, msg);
 			} else {
 				FacesMessage moduleNameErrorMsg = null;
@@ -1093,8 +1089,8 @@ public class UserLoginActionBean {
 						 * staging.getPassword().setValue(userLoginPwd); navigation = new
 						 * StagingLoginActionBean().stagingLogin_loginAction();
 						 * if("success".equalsIgnoreCase(navigation)){ url = moduleUrl1; } else {
-						 * moduleNameErrorMsg = I18nHelper.getMessage("EDM",null); errorMsg =
-						 * I18nHelper.getMessage("invalid_user_id_or_password_for_module",new
+						 * moduleNameErrorMsg = i18nHelper.getMessage("EDM",null); errorMsg =
+						 * i18nHelper.getMessage("invalid_user_id_or_password_for_module",new
 						 * String[]{moduleNameErrorMsg.getDetail().toString()});
 						 * session.setAttribute("nomoduleaccess",errorMsg.getDetail().toString());
 						 * response.sendRedirect(contextPath+"/faces/commons/welcome.jsp");
@@ -1109,8 +1105,8 @@ public class UserLoginActionBean {
 						 * input.getPassword().setValue(userLoginPwd); navigation = new
 						 * ReportLoginActionBean().reportLogin_submitAction();
 						 * if("success".equalsIgnoreCase(navigation)){ url = moduleUrl1; } else{
-						 * moduleNameErrorMsg = I18nHelper.getMessage("OMS",null); errorMsg =
-						 * I18nHelper.getMessage("invalid_user_id_or_password_for_module",new
+						 * moduleNameErrorMsg = i18nHelper.getMessage("OMS",null); errorMsg =
+						 * i18nHelper.getMessage("invalid_user_id_or_password_for_module",new
 						 * String[]{moduleNameErrorMsg.getDetail().toString()});
 						 * session.setAttribute("nomoduleaccess",errorMsg.getDetail().toString());
 						 * response.sendRedirect(contextPath+"/faces/commons/welcome.jsp");
@@ -1125,8 +1121,8 @@ public class UserLoginActionBean {
 						 * staging.getPassword().setValue(userLoginPwd); navigation = new
 						 * StagingLoginActionBean().stagingLogin_loginAction();
 						 * if("success".equalsIgnoreCase(navigation)){ url = moduleUrl1; } else {
-						 * moduleNameErrorMsg = I18nHelper.getMessage("USER",null); errorMsg =
-						 * I18nHelper.getMessage("invalid_user_id_or_password_for_module",new
+						 * moduleNameErrorMsg = i18nHelper.getMessage("USER",null); errorMsg =
+						 * i18nHelper.getMessage("invalid_user_id_or_password_for_module",new
 						 * String[]{moduleNameErrorMsg.getDetail().toString()});
 						 * session.setAttribute("nomoduleaccess",errorMsg.getDetail().toString());
 						 * response.sendRedirect(contextPath+"/faces/commons/welcome.jsp");
@@ -1137,7 +1133,7 @@ public class UserLoginActionBean {
 						svb.setUserRefNo(null);
 						svb.setIpAddress(null);
 						session.invalidate();
-						FacesMessage msg = I18nHelper.getMessage("User_Logout_Successfully", null);
+						FacesMessage msg = i18nHelper.getMessage("User_Logout_Successfully", null);
 						ctx.addMessage(null, msg);
 						response.sendRedirect(contextPath + "/faces/commons/userLogin.jsp");
 						ctx.responseComplete();
@@ -1149,8 +1145,8 @@ public class UserLoginActionBean {
 						if ("success".equalsIgnoreCase(navigation)) {
 							url = moduleUrl1;
 						} else {
-							moduleNameErrorMsg = I18nHelper.getMessage("EDM", null);
-							errorMsg = I18nHelper.getMessage("invalid_user_id_or_password_for_module",
+							moduleNameErrorMsg = i18nHelper.getMessage("EDM", null);
+							errorMsg = i18nHelper.getMessage("invalid_user_id_or_password_for_module",
 									new String[] { moduleNameErrorMsg.getDetail().toString() });
 							session.setAttribute("nomoduleaccess", errorMsg.getDetail().toString());
 							navigation = "goToWelcomePage";

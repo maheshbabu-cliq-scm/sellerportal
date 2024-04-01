@@ -12,6 +12,7 @@ import com.sellerportal.model.Ismcnd;
 import com.sellerportal.model.Ismubi;
 import com.sellerportal.repository.LoginRepository;
 import com.sellerportal.dao.IsmubiDAO;
+import com.sellerportal.integra.impl.octashop.utils.OctashopUtils;
 /**********************************************************************************
   		
   		@author Binod Kumar
@@ -116,7 +117,7 @@ public class UserValidationActionBean {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(loginid.length()>0)
+		if(OctashopUtils.isNotEmpty(loginid))
 		{
 			isValidUser=true;
 		}
@@ -127,10 +128,18 @@ public class UserValidationActionBean {
 		return isValidUser;
 	}
 	
-	public static boolean loginUserAction(String loginId) {
+	public boolean loginUserAction(String loginId) {
 		
 		boolean isValidUser = true;
-		isValidUser = new IsmubiDAO().checkValidLoginUser(loginId);
+		String loginid = loginDao.checkValidLoginUser(loginId);
+		if(OctashopUtils.isNotEmpty(loginid))
+		{
+			isValidUser=true;
+		}
+		else
+		{
+			isValidUser=false;
+		}
 		return isValidUser;
 	}
 	
